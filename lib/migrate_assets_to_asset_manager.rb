@@ -13,7 +13,7 @@ class MigrateAssetsToAssetManager
     sidekiq_options queue: :asset_migration
 
     def perform(file_path)
-      raise "This is a test. Please ignore."
+      # raise "This is a test. Please ignore."
       file = OrganisationLogoFile.open(file_path)
       create_whitehall_asset(file) unless asset_exists?(file)
     end
@@ -21,7 +21,12 @@ class MigrateAssetsToAssetManager
   private
 
     def create_whitehall_asset(file)
-      Services.asset_manager.create_whitehall_asset(
+      asset_manager = GdsApi::AssetManager.new(
+        Plek.find("asset-manager"),
+        bearer_token: '12345678'
+      )
+
+      asset_manager.create_whitehall_asset(
         file: file,
         legacy_url_path: file.legacy_url_path,
         legacy_last_modified: file.legacy_last_modified,
