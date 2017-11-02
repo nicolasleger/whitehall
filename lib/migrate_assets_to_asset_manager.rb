@@ -17,7 +17,8 @@ class MigrateAssetsToAssetManager
       # raise GdsApi::HTTPUnauthorized.new(999)
       # raise StandardError.new('Test is a test. Please ignore.')
       # raise GdsApi::BaseError.new('This is a test. Please ignore.')
-      raise GdsApi::HTTPErrorResponse.new(999, 'This is a test. Please ignore.')
+      # raise GdsApi::HTTPErrorResponse.new(999, 'This is a test. Please ignore.')
+      raise GdsApi::HTTPClientError.new(999, 'This is a test. Please ignore.')
       file = OrganisationLogoFile.open(file_path)
       create_whitehall_asset(file) unless asset_exists?(file)
     end
