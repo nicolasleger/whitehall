@@ -3,7 +3,7 @@ class Person < ApplicationRecord
   include Searchable
   include MinisterialRole::MinisterialRoleReindexingConcern
 
-  mount_uploader :image, ImageUploader, mount_on: :carrierwave_image
+  mount_uploader :image, PersonImageUploader, mount_on: :carrierwave_image
 
   has_many :role_appointments
   has_many :current_role_appointments,

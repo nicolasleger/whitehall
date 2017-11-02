@@ -1,0 +1,2 @@
+class PersonImageUploader < ImageUploader
+end
