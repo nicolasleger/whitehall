@@ -7,9 +7,10 @@ namespace :test do
   task :in_parallel => :environment do
     ENV['CUCUMBER_FORMAT'] = 'progress'
     ENV['RAILS_ENV'] = 'test'
+    number_of_processes = ENV['PARALLEL_TEST_PROCESSORS']
 
     setup_tasks = ['parallel:drop', 'parallel:create', 'parallel:load_schema']
-    test_tasks = ['parallel:test', 'shared_mustache:compile', 'parallel:features', 'test:javascript']
+    test_tasks = ["parallel:test[#{number_of_processes}]", 'shared_mustache:compile', 'parallel:features', 'test:javascript']
     cleanup_tasks = ['test:cleanup']
 
     setup_tasks.each { |task| Rake::Task[task].invoke }
