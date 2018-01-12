@@ -80,6 +80,8 @@ gem 'sass', '~> 3.5'
 gem 'sassc-rails', '~> 1.3'
 gem 'uglifier', '~> 3.2'
 
+gem 'rack-mini-profiler'
+
 group :development, :test do
   gem 'parallel_tests'
   gem 'test-queue', '~> 0.2.13'

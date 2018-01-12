@@ -17,6 +17,10 @@ class ApplicationController < ActionController::Base
   layout 'frontend'
   after_action :set_slimmer_template
 
+  before_action do
+    Rack::MiniProfiler.authorize_request
+  end
+
   private
 
   def set_audit_trail_whodunnit
