@@ -42,13 +42,13 @@ module Whitehall
     end
 
     def form_actions(options = {})
-      @template.content_tag(:div, "class" => "form-actions") {
+      @template.content_tag(:div, "class" => "form-actions", data: { module: 'track-click', 'track-category' => 'form-button', 'track-action' => "#{object.class.name.demodulize.underscore.dasherize}-button" }) {
         options[:buttons].each do |name, value|
-          @template.concat submit(value, name: name, class: "btn btn-primary btn-lg")
+          @template.concat submit(value, name: name, class: "btn btn-primary btn-lg js-track")
         end
         @template.concat @template.content_tag(:span, "class" => "or_cancel") {
           @template.concat %{ or }
-          @template.concat @template.link_to('cancel', cancel_path(options[:cancel]))
+          @template.concat @template.link_to('cancel', cancel_path(options[:cancel]), class: 'js-track')
         }
       }
     end
