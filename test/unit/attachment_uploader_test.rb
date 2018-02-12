@@ -220,8 +220,9 @@ class AttachmentUploaderPDFTest < ActiveSupport::TestCase
   end
 
   test "should store an actual PNG" do
-    type = `file -b --mime-type "#{@uploader.thumbnail.path}"`
-    assert_equal "image/png", type.strip
+    expect_thumbnail_sent_to_asset_manager_to_be_an_actual_png
+
+    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
   end
 
   test "should ensure the content type of the stored thumbnail is image/png" do
@@ -262,6 +263,16 @@ class AttachmentUploaderPDFTest < ActiveSupport::TestCase
         assert_equal File.binread(generic_thumbnail_path),
                      File.binread(value[:file].path),
                      "Thumbnailing when PDF conversion fails should use default image."
+      end
+    end
+  end
+
+  def expect_thumbnail_sent_to_asset_manager_to_be_an_actual_png
+    Services.asset_manager.stubs(:create_whitehall_asset)
+    Services.asset_manager.expects(:create_whitehall_asset).with do |value|
+      if value[:file].path.ends_with?('.png')
+        type = `file -b --mime-type "#{value[:file].path}"`
+        assert_equal "image/png", type.strip
       end
     end
   end
