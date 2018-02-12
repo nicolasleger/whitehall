@@ -230,11 +230,9 @@ class AttachmentUploaderPDFTest < ActiveSupport::TestCase
   end
 
   test "should scale the thumbnail down proportionally to A4" do
-    identify_details = `identify "#{Rails.root.join("public", @uploader.thumbnail.path)}"`
-    _path, _type, geometry, _rest = identify_details.split
-    width, height = geometry.split("x")
+    expect_thumbnail_sent_to_asset_manager_to_be_scaled_proportionally
 
-    assert (width == "105" || height == "140"), "geometry should be proportional scaled, but was #{geometry}"
+    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
   end
 
   test "should use a generic thumbnail if conversion fails" do
@@ -273,6 +271,20 @@ class AttachmentUploaderPDFTest < ActiveSupport::TestCase
       if value[:file].path.ends_with?('.png')
         type = `file -b --mime-type "#{value[:file].path}"`
         assert_equal "image/png", type.strip
+      end
+    end
+  end
+
+  def expect_thumbnail_sent_to_asset_manager_to_be_scaled_proportionally
+    Services.asset_manager.stubs(:create_whitehall_asset)
+    Services.asset_manager.expects(:create_whitehall_asset).with do |value|
+      if value[:file].path.ends_with?('.png')
+        identify_details = `identify "#{Rails.root.join("public", value[:file].path)}"`
+
+        _path, _type, geometry, _rest = identify_details.split
+        width, height = geometry.split("x")
+
+        assert (width == "105" || height == "140"), "geometry should be proportional scaled, but was #{geometry}"
       end
     end
   end
