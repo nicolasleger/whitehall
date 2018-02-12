@@ -240,26 +240,30 @@ class AttachmentUploaderPDFTest < ActiveSupport::TestCase
     @uploader = AttachmentUploader.new(FactoryBot.create(:attachment_data), "mounted-as")
     @uploader.thumbnail.stubs(:pdf_thumbnail_command).returns("false")
 
-    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
+    expect_fallback_thumbnail_to_be_uploaded_to_asset_manager
 
-    assert_fallback_thumbnail_used(@uploader)
+    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
   end
 
   test "should use a generic thumbnail if conversion takes longer than 10 seconds to complete" do
     @uploader = AttachmentUploader.new(FactoryBot.create(:attachment_data), "mounted-as")
     @uploader.thumbnail.stubs(:pdf_thumbnail_command).raises(Timeout::Error)
 
-    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
+    expect_fallback_thumbnail_to_be_uploaded_to_asset_manager
 
-    assert_fallback_thumbnail_used(@uploader)
+    @uploader.store!(fixture_file_upload('two-pages-with-content.pdf'))
   end
 
-  def assert_fallback_thumbnail_used(_uploader)
-    assert @uploader.thumbnail.path.ends_with?(".png"), "should be a png"
-    generic_thumbnail_path = File.expand_path("app/assets/images/pub-cover.png")
-    assert_equal File.binread(generic_thumbnail_path),
-                 File.binread(@uploader.thumbnail.path),
-                 "Thumbnailing when PDF conversion fails should use default image."
+  def expect_fallback_thumbnail_to_be_uploaded_to_asset_manager
+    Services.asset_manager.stubs(:create_whitehall_asset)
+    Services.asset_manager.expects(:create_whitehall_asset).with do |value|
+      if value[:file].path.ends_with?('.png')
+        generic_thumbnail_path = File.expand_path("app/assets/images/pub-cover.png")
+        assert_equal File.binread(generic_thumbnail_path),
+                     File.binread(value[:file].path),
+                     "Thumbnailing when PDF conversion fails should use default image."
+      end
+    end
   end
 end
 
