@@ -227,19 +227,6 @@ module Admin::EditionsHelper
     end
   end
 
-  def attachment_virus_status(attachment)
-    if attachment.could_contain_viruses?
-      case attachment.virus_status
-      when :clean
-        nil
-      when :pending
-        content_tag(:p, "Virus scanning", class: "virus-scanning")
-      else
-        content_tag(:p, "Virus found", class: "virus")
-      end
-    end
-  end
-
   def attachment_metadata_tag(attachment)
     labels = {
       isbn: 'ISBN',
