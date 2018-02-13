@@ -73,6 +73,8 @@ class Admin::AttachmentsControllerTest < ActionController::TestCase
     end
 
     test "DELETE :destroy handles file attachments for #{type} as attachable" do
+      Services.asset_manager.stubs(:whitehall_asset).returns('id' => 'http://asset-manager/assets/asset-id')
+
       attachable = create(type)
       attachment = create(:file_attachment, attachable: attachable)
       attachment_data = attachment.attachment_data
