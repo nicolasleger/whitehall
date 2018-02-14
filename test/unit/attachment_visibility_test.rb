@@ -231,6 +231,8 @@ class AttachmentVisibilityTest < ActiveSupport::TestCase
   end
 
   test "#visible returns false for deleted attachment on a Consultation Response" do
+    Services.asset_manager.stubs(:whitehall_asset).returns('id' => 'http://asset-manager/assets/asset-id')
+
     response = create(:consultation_with_outcome).outcome
     response.attachments << build(:file_attachment)
     attachment = response.attachments.first
