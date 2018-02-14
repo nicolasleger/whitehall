@@ -220,6 +220,8 @@ class AttachmentTest < ActiveSupport::TestCase
   end
 
   test 'destroy sets deleted true' do
+    Services.asset_manager.stubs(:whitehall_asset).returns('id' => 'http://asset-manager/assets/asset-id')
+
     attachment = create(:file_attachment)
     attachment.destroy
     assert attachment.deleted?
