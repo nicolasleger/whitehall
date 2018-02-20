@@ -140,4 +140,10 @@ class Whitehall::AssetManagerStorage::FileTest < ActiveSupport::TestCase
 
     assert_equal AttachmentFileSizePresenter::Null, @file.file_size.class
   end
+
+  test '#file_size returns a null file size if API request throws exception' do
+    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).raises('Error!')
+
+    assert_equal AttachmentFileSizePresenter::Null, @file.file_size.class
+  end
 end

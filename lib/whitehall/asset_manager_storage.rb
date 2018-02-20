@@ -52,6 +52,8 @@ class Whitehall::AssetManagerStorage < CarrierWave::Storage::Abstract
       else
         AttachmentFileSizePresenter::Null.new
       end
+    rescue
+      AttachmentFileSizePresenter::Null.new
     end
   end
 end
