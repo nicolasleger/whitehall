@@ -123,7 +123,7 @@ class Whitehall::AssetManagerStorage::FileTest < ActiveSupport::TestCase
   end
 
   test '#file_size fetches the size from Asset Manager' do
-    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).returns({'size' => 100})
+    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).returns('size' => 100)
     AttachmentFileSizePresenter.stubs(:new).with(100).returns('presented-file-size')
 
     assert_equal 'presented-file-size', @file.file_size
@@ -136,7 +136,7 @@ class Whitehall::AssetManagerStorage::FileTest < ActiveSupport::TestCase
   end
 
   test '#file_size returns a null file size if response has a nil size key' do
-    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).returns({'size' => nil})
+    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).returns('size' => nil)
 
     assert_equal AttachmentFileSizePresenter::Null, @file.file_size.class
   end
