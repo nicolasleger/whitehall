@@ -52,7 +52,8 @@ class Whitehall::AssetManagerStorage < CarrierWave::Storage::Abstract
       else
         AttachmentFileSizePresenter::Null.new
       end
-    rescue
+    rescue => e
+      GovukError.notify(e)
       AttachmentFileSizePresenter::Null.new
     end
   end

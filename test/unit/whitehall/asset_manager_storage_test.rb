@@ -146,4 +146,13 @@ class Whitehall::AssetManagerStorage::FileTest < ActiveSupport::TestCase
 
     assert_equal AttachmentFileSizePresenter::Null, @file.file_size.class
   end
+
+  test '#file_size reports if API request throws exception' do
+    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).raises('Error!')
+    GovukError.expects(:notify).with do |exception|
+      assert_equal 'Error!', exception.message
+    end
+
+    @file.file_size
+  end
 end
