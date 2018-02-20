@@ -35,7 +35,7 @@ class Whitehall::AssetManagerAndQuarantinedFileStorage < CarrierWave::Storage::A
     end
 
     def file_size
-      AttachmentFileSizePresenter.new(@quarantined_file.size)
+      @asset_manager_file.file_size
     end
   end
 end
