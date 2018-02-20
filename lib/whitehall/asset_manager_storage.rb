@@ -47,10 +47,10 @@ class Whitehall::AssetManagerStorage < CarrierWave::Storage::Abstract
 
     def file_size
       response = Services.asset_manager.whitehall_asset(path)
-      if !response.has_key?('size')
-        AttachmentFileSizePresenter::Null.new
-      else
+      if response.has_key?('size') && !response['size'].nil?
         AttachmentFileSizePresenter.new(response['size'])
+      else
+        AttachmentFileSizePresenter::Null.new
       end
     end
   end
