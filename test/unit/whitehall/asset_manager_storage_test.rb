@@ -121,4 +121,11 @@ class Whitehall::AssetManagerStorage::FileTest < ActiveSupport::TestCase
 
     assert_equal 'http://assets-host/government/uploads/path/to/%C3%A4sset.png', file.url
   end
+
+  test '#file_size fetches the size from Asset Manager' do
+    Services.asset_manager.stubs(:whitehall_asset).with(@asset_url_path).returns({'size' => 100})
+    AttachmentFileSizePresenter.stubs(:new).with(100).returns('presented-file-size')
+
+    assert_equal 'presented-file-size', @file.file_size
+  end
 end

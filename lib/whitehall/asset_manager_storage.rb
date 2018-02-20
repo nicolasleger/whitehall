@@ -44,5 +44,10 @@ class Whitehall::AssetManagerStorage < CarrierWave::Storage::Abstract
     def content_type
       MIME::Types.type_for(filename).first.to_s
     end
+
+    def file_size
+      response = Services.asset_manager.whitehall_asset(path)
+      AttachmentFileSizePresenter.new(response['size'])
+    end
   end
 end
