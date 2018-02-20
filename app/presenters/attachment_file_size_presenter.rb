@@ -10,4 +10,10 @@ class AttachmentFileSizePresenter
   def to_s
     number_to_human_size(size)
   end
+
+  class Null
+    def to_s
+      ''
+    end
+  end
 end
