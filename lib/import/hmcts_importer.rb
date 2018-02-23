@@ -10,7 +10,7 @@ module Import
     end
 
     def import(csv_path)
-      importer_user = User.find_by(name: "Automatic Data Importer")
+      importer_user = User.find_by!(name: "Automatic Data Importer")
       raise "Could not find 'Automatic Data Importer' user" unless importer_user
 
       HmctsCsvParser.publications(csv_path).each do |publication_data|
@@ -27,7 +27,7 @@ module Import
           # match the Whitehall org name exactly.
           publication.lead_organisations = [default_organisation]
           # publication.lead_organisations = publication_data[:lead_organisations].map { |org| Organisation.find_by(name: org) }
-          publication.supporting_organisations = publication_data[:supporting_organisations].map { |org| Organisation.find_by(name: org) }
+          publication.supporting_organisations = publication_data[:supporting_organisations].map { |org| Organisation.find_by!(name: org) }
           publication.creator = importer_user
           # TODO: Confirm the alternative format provider org and email address with HMCTS
           publication.alternative_format_provider = default_organisation
@@ -60,7 +60,7 @@ module Import
     end
 
     def default_organisation
-      @_default_organisation ||= Organisation.find_by(name: "HM Courts & Tribunals Service")
+      @_default_organisation ||= Organisation.find_by!(name: "HM Courts & Tribunals Service")
     end
 
     def publication_type_slug(name)
