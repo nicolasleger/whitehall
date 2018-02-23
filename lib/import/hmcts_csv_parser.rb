@@ -5,7 +5,7 @@ module Import
       artefact_code
       category
       artefact_file_name
-      artefact_type
+      artefact_new_file_name
       artefact_title
       artefact_link
       artefact_url
@@ -14,6 +14,7 @@ module Import
       publication_summary
       publication_body
       published_before
+      previous_publishing_date
       has_images
       alternative_format_email
       policy
@@ -28,11 +29,6 @@ module Import
       new_attachment_url
     ).freeze
 
-    PUBLICATION_TYPE_SLUGS = {
-      "Form" => "forms",
-      "Guidance" => "guidance",
-    }.freeze
-
     def self.publications(path)
       csv = CSV.read(path, headers: CSV_HEADERS)
 
@@ -41,25 +37,27 @@ module Import
         publication_details = {}
 
         # Skip the header row
-        csv[1..-1].each do |row|
+        csv[1..-1].each_with_index do |row, index|
           if row[:publication_page_id] == page_id
             publication_details[:attachments] << attachment_details(row)
           else
             yielder << publication_details unless page_id.nil?
 
+            page_id = row[:publication_page_id]
+
             publication_details = {
-              publication_type: publication_type_slug(row[:publication_type]),
+              csv_row: index + 2, # Add 1 because Google Sheets is 1-indexed, and another 1 because we skipped the header row
+              page_id: page_id,
+              publication_type: row[:publication_type],
               title: row[:publication_title],
               summary: row[:publication_summary],
               body: row[:publication_body],
-              # TODO: Handle multiple policy areas. Will they comma-separate these?
+              # TODO: Handle multiple policy areas. We've asked HMCTS to semicolon-separate these
               policy_area: row[:policy_areas],
               attachments: [],
             }
 
             publication_details[:attachments] << attachment_details(row)
-
-            page_id = row[:publication_page_id]
           end
         end
 
@@ -67,13 +65,13 @@ module Import
       end
     end
 
-    def self.publication_type_slug(name)
-      PUBLICATION_TYPE_SLUGS[name] || raise("Unknown publication type '#{name}'")
-    end
-
     def self.attachment_details(row)
       {
         title: row[:artefact_title],
+        # TODO: Use the "new artefact file name" column rather than this, which
+        # is the old file name. HMCTS need to update the new column before we
+        # can use it, though, because it currently contains file names whcih are
+        # too long or contain illegal characters like '/'.
         file_name: row[:artefact_file_name],
         url: row[:artefact_url],
       }
