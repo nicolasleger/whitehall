@@ -3,6 +3,8 @@ class PolicyGroup < ApplicationRecord
   include ::Attachable
   include PublishesToPublishingApi
 
+  after_destroy :delete_all_attachments
+
   validates :email, email_format: true, allow_blank: true
   validates :name, presence: true
 

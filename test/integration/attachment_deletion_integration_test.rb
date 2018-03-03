@@ -186,8 +186,15 @@ class AttachmentDeletionIntegrationTest < ActionDispatch::IntegrationTest
       it 'responds with 404 Not Found for attachment URL' do
         logout
 
-        get @attachment_url
-        assert_response :not_found
+        assert_raises(ActiveRecord::RecordNotFound) do
+          get @attachment_url
+        end
+      end
+
+      it 'deletes attachment in Asset Manager' do
+        Services.asset_manager.expects(:delete_asset)
+          .with(asset_id)
+        AssetManagerDeleteAssetWorker.drain
       end
     end
   end
