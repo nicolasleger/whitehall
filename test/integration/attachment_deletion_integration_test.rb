@@ -6,23 +6,26 @@ class AttachmentDeletionIntegrationTest < ActionDispatch::IntegrationTest
   include Capybara::DSL
   include Rails.application.routes.url_helpers
 
+  let(:filename) { 'sample.docx' }
+  let(:file) { File.open(path_to_attachment(filename)) }
+  let(:attachment) { build(:file_attachment, attachable: attachable, file: file) }
+  let(:asset_id) { 'asset-id' }
+
+  before do
+    create(:government)
+    login_as(user)
+    attachable.attachments << attachment
+    stub_whitehall_asset(filename, id: asset_id)
+    VirusScanHelpers.simulate_virus_scan
+  end
+
   context 'given a draft document with a file attachment' do
-    let(:managing_editor) { create(:managing_editor) }
-
-    let(:filename) { 'sample.docx' }
-    let(:file) { File.open(path_to_attachment(filename)) }
-    let(:attachment) { build(:file_attachment, attachable: edition, file: file) }
-    let(:asset_id) { 'asset-id' }
-
+    let(:user) { create(:managing_editor) }
     let(:edition) { create(:news_article) }
+    let(:attachable) { edition }
 
     before do
-      create(:government)
-      login_as(managing_editor)
-      edition.attachments << attachment
       setup_publishing_api_for(edition)
-      stub_whitehall_asset(filename, id: asset_id)
-      VirusScanHelpers.simulate_virus_scan
 
       visit admin_news_article_path(edition)
       click_link 'Modify attachments'
@@ -133,6 +136,58 @@ class AttachmentDeletionIntegrationTest < ActionDispatch::IntegrationTest
             AssetManagerDeleteAssetWorker.drain
           end
         end
+      end
+    end
+  end
+
+  context 'given a policy group with a file attachment' do
+    let(:user) { create(:gds_editor) }
+    let(:policy_group) { create(:policy_group) }
+    let(:attachable) { policy_group }
+
+    before do
+      visit admin_policy_group_attachments_path(policy_group)
+      @attachment_url = find('.existing-attachments a', text: filename)[:href]
+    end
+
+    context 'when attachment is deleted' do
+      before do
+        visit admin_policy_group_attachments_path(policy_group)
+        within '.existing-attachments' do
+          click_link 'Delete'
+        end
+        assert_text 'Attachment deleted'
+      end
+
+      it 'responds with 404 Not Found for attachment URL' do
+        logout
+
+        assert_raises(ActiveRecord::RecordNotFound) do
+          get @attachment_url
+        end
+      end
+
+      it 'deletes attachment in Asset Manager' do
+        Services.asset_manager.expects(:delete_asset)
+          .with(asset_id)
+        AssetManagerDeleteAssetWorker.drain
+      end
+    end
+
+    context 'when policy group is deleted' do
+      before do
+        visit admin_policy_groups_path
+        within record_css_selector(policy_group) do
+          click_button 'Delete'
+        end
+        assert_text %{"#{policy_group.name}" deleted.}
+      end
+
+      it 'responds with 404 Not Found for attachment URL' do
+        logout
+
+        get @attachment_url
+        assert_response :not_found
       end
     end
   end
