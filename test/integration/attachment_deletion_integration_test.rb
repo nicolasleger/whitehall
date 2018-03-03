@@ -17,6 +17,7 @@ class AttachmentDeletionIntegrationTest < ActionDispatch::IntegrationTest
     let(:edition) { create(:news_article) }
 
     before do
+      create(:government)
       login_as(managing_editor)
       edition.attachments << attachment
       setup_publishing_api_for(edition)
@@ -73,6 +74,67 @@ class AttachmentDeletionIntegrationTest < ActionDispatch::IntegrationTest
         AssetManagerDeleteAssetWorker.drain
       end
     end
+
+    context 'when draft document is published and a new draft is created' do
+      before do
+        visit admin_news_article_path(edition)
+        force_publish_document
+
+        visit admin_news_article_path(edition)
+        click_button 'Create new edition to edit'
+
+        fill_in 'Public change note', with: 'testing'
+        click_button 'Save'
+        assert_text 'The document has been saved'
+      end
+
+      context 'when attachment is deleted' do
+        let(:new_edition) { edition.latest_edition }
+
+        before do
+          visit admin_news_article_path(new_edition)
+          click_link 'Modify attachments'
+          within '.existing-attachments' do
+            click_link 'Delete'
+          end
+          assert_text 'Attachment deleted'
+        end
+
+        it 'responds with 200 OK for attachment URL' do
+          logout
+
+          get @attachment_url
+          assert_response :success
+        end
+
+        it 'does not delete attachment in Asset Manager' do
+          Services.asset_manager.expects(:delete_asset)
+            .with(asset_id).never
+          AssetManagerDeleteAssetWorker.drain
+        end
+
+        context 'when draft document is published and a new draft is created' do
+          before do
+            visit admin_news_article_path(new_edition)
+            force_publish_document
+          end
+
+          it 'responds with 404 Not Found for attachment URL' do
+            logout
+
+            assert_raises(ActiveRecord::RecordNotFound) do
+              get @attachment_url
+            end
+          end
+
+          it 'deletes attachment in Asset Manager' do
+            Services.asset_manager.expects(:delete_asset)
+              .with(asset_id)
+            AssetManagerDeleteAssetWorker.drain
+          end
+        end
+      end
+    end
   end
 
 private
@@ -86,6 +148,7 @@ private
       content_id: edition.document.content_id,
       links: {}
     )
+    publishing_api_has_linkables([], document_type: "topic")
   end
 
   def path_to_attachment(filename)
@@ -97,5 +160,12 @@ private
     Services.asset_manager.stubs(:whitehall_asset)
       .with(&ends_with(filename))
       .returns(attributes.merge(id: url_id).stringify_keys)
+  end
+
+  def force_publish_document
+    click_link 'Force publish'
+    fill_in 'Reason for force publishing', with: 'testing'
+    click_button 'Force publish'
+    assert_text %r{The document .* has been published}
   end
 end

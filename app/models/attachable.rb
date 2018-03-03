@@ -10,6 +10,10 @@ module Attachable
              -> { not_deleted.order('attachments.ordering, attachments.id') },
              as: :attachable
 
+    has_many :deleted_file_attachments,
+            -> { deleted },
+            class_name: "FileAttachment",
+            as: :attachable
     has_many :deleted_html_attachments,
              -> { deleted },
              class_name: "HtmlAttachment",

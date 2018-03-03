@@ -17,6 +17,12 @@ Whitehall.edition_services.tap do |coordinator|
     end
   end
 
+  coordinator.subscribe(/publish|force_publish/) do |_event, edition, _options|
+    edition.deleted_file_attachments.each do |attachment|
+      attachment.attachment_data.destroy!
+    end
+  end
+
   coordinator.subscribe('update_draft') do |_event, edition, _options|
     edition.attachables.flat_map(&:attachments).each do |attachment|
       ServiceListeners::AttachmentAccessLimitedUpdater
